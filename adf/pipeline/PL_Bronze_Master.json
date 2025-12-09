@@ -1,0 +1,61 @@
+{
+    "name": "PL_Bronze_Master",
+    "properties": {
+        "activities": [
+            {
+                "name": "Trigger_Incremental_Pipeline",
+                "type": "ExecutePipeline",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 3,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [
+                    {
+                        "name": "purpose",
+                        "value": "Triggers PL_Bronze_Incremental for near-realtime/daily loads."
+                    }
+                ],
+                "typeProperties": {
+                    "pipeline": {
+                        "referenceName": "PL_Bronze_Incremental",
+                        "type": "PipelineReference"
+                    },
+                    "waitOnCompletion": true
+                }
+            },
+            {
+                "name": "Trigger_Snapshot_Pipeline",
+                "type": "ExecutePipeline",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 3,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [
+                    {
+                        "name": "purpose",
+                        "value": "Triggers PL_Bronze_Snapshot for quarterly reference data loads."
+                    }
+                ],
+                "typeProperties": {
+                    "pipeline": {
+                        "referenceName": "PL_Bronze_Snapshot",
+                        "type": "PipelineReference"
+                    },
+                    "waitOnCompletion": true
+                }
+            }
+        ],
+        "parameters": {},
+        "annotations": [],
+        "description": "Orchestrates the execution of child pipelines based on defined frequencies and conditions."
+    },
+    "type": "Microsoft.DataFactory/factories/pipelines"
+}

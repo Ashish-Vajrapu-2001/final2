@@ -1,0 +1,46 @@
+{
+  "name": "TR_Bronze_QuarterlySnapshot",
+  "properties": {
+    "annotations": [],
+    "description": "Triggers the master Bronze pipeline for quarterly reference data ingestion (full snapshots).",
+    "pipelines": [
+      {
+        "pipelineReference": {
+          "referenceName": "PL_Bronze_Master",
+          "type": "PipelineReference"
+        },
+        "parameters": {
+          "p_frequency_filter": "quarterly"
+        }
+      }
+    ],
+    "recurrence": {
+      "frequency": "Month",
+      "interval": 1,
+      "startTime": "2024-01-01T00:00:00Z",
+      "timeZone": "UTC",
+      "schedule": {
+        "minutes": [
+          0
+        ],
+        "hours": [
+          0
+        ],
+        "monthlyOccurrences": [
+          {
+            "day": "Sunday",
+            "occurrence": 1
+          }
+        ],
+        "months": [
+          1,
+          4,
+          7,
+          10
+        ]
+      }
+    },
+    "type": "ScheduleTrigger",
+    "runtimeState": "Started"
+  }
+}

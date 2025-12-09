@@ -1,0 +1,29 @@
+{
+  "name": "DS_ADLS_Staging_Parquet_Generic",
+  "properties": {
+    "linkedServiceName": {
+      "referenceName": "LS_ADLS_DataLake",
+      "type": "LinkedServiceReference"
+    },
+    "parameters": [
+      {
+        "name": "path",
+        "type": "String",
+        "defaultValue": ""
+      }
+    ],
+    "annotations": [],
+    "type": "Parquet",
+    "typeProperties": {
+      "location": {
+        "type": "AzureBlobFSLocation",
+        "folderPath": {
+          "value": "@dataset().path",
+          "type": "Expression"
+        },
+        "fileSystem": "staging"
+      }
+    },
+    "description": "Generic dataset for temporary Parquet files staged in ADLS Gen2 before Delta conversion."
+  }
+}

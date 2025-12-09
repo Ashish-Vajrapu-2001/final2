@@ -1,0 +1,25 @@
+{
+  "name": "LS_ADLS_DataLake",
+  "properties": {
+    "annotations": [
+      {
+        "value": "LS-002",
+        "type": "Expression"
+      },
+      {
+        "value": "Connects to the Azure Data Lake Storage Gen2 for staging and Bronze layer storage.",
+        "type": "Expression"
+      },
+      {
+        "value": "1-critical",
+        "type": "Expression"
+      }
+    ],
+    "type": "AzureDataLakeStorageGen2",
+    "typeProperties": {
+      "url": "https://adlsbronzedev.dfs.core.windows.net",
+      "authenticationType": "ManagedIdentity"
+    },
+    "description": "Connects to the Azure Data Lake Storage Gen2 for staging and Bronze layer storage."
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "LS_KeyVault",
+  "properties": {
+    "annotations": [],
+    "type": "AzureKeyVault",
+    "typeProperties": {
+      "baseUrl": "https://kv-bronze-dev.vault.azure.net/"
+    },
+    "connectVia": {
+      "referenceName": "AutoResolveIntegrationRuntime",
+      "type": "IntegrationRuntimeReference"
+    },
+    "description": "Connects to Azure Key Vault to retrieve secrets like database connection strings or Databricks tokens."
+  }
+}

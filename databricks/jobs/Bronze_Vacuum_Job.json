@@ -1,0 +1,60 @@
+{
+  "name": "Bronze_Vacuum_Job",
+  "schedule": {
+    "quartz_cron_expression": "0 0 ? * SUN *",
+    "timezone_id": "UTC",
+    "pause_status": "UNPAUSED"
+  },
+  "email_notifications": {
+    "on_start": [],
+    "on_success": [],
+    "on_failure": []
+  },
+  "webhook_notifications": {},
+  "timeout_seconds": 3600,
+  "max_concurrent_runs": 1,
+  "tasks": [
+    {
+      "task_key": "vacuum_bronze_tables",
+      "notebook_task": {
+        "notebook_path": "/Shared/bronze_maintenance/nb_bronze_vacuum",
+        "base_parameters": {}
+      },
+      "new_cluster": {
+        "spark_version": "14.3.x-scala2.12",
+        "node_type_id": "Standard_DS3_v2",
+        "num_workers": 1,
+        "autoscale": {
+          "min_workers": 1,
+          "max_workers": 2
+        },
+        "azure_attributes": {
+          "first_on_demand": 1,
+          "availability": "SPOT_WITH_FALLBACK_AZURE",
+          "spot_bid_max_price": -1
+        },
+        "cluster_log_conf": {
+          "dbfs": {
+            "destination": "dbfs:/databricks/cluster-logs/bronze-vacuum"
+          }
+        },
+        "custom_tags": {
+          "Project": "BronzePipeline",
+          "JobType": "Vacuum",
+          "Environment": "Dev"
+        },
+        "data_security_mode": "SINGLE_USER",
+        "runtime_engine": "STANDARD",
+        "enable_elastic_disk": true
+      },
+      "timeout_seconds": 1800,
+      "max_retries": 1,
+      "min_retry_interval_millis": 60000
+    }
+  ],
+  "tags": {
+    "job_type": "maintenance",
+    "layer": "bronze"
+  },
+  "format": "MULTI_TASK"
+}

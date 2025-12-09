@@ -1,0 +1,30 @@
+{
+  "name": "TR_Bronze_NearRealtime",
+  "properties": {
+    "annotations": [],
+    "runtimeState": "Started",
+    "pipeline": {
+      "pipelineReference": {
+        "referenceName": "PL_Bronze_Master",
+        "type": "PipelineReference"
+      },
+      "parameters": {
+        "p_frequency_filter": "near-realtime"
+      }
+    },
+    "type": "TumblingWindowTrigger",
+    "typeProperties": {
+      "frequency": "Minute",
+      "interval": 15,
+      "startTime": "2023-01-01T00:00:00Z",
+      "endTime": null,
+      "delay": "00:00:00",
+      "maxConcurrency": 50,
+      "retryPolicy": {
+        "intervalInSeconds": 30,
+        "count": 3
+      },
+      "dependsOn": []
+    }
+  }
+}

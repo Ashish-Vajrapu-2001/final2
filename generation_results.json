@@ -1,0 +1,105 @@
+{
+  "success": [
+    {
+      "artifact_id": "SQL-001",
+      "prompt_file": "01_SQL-001_bronze_ingestion_watermarks_create_table.sql.txt",
+      "output_path": "./generated_code/sql_scripts/bronze_ingestion_watermarks_create_table.sql"
+    },
+    {
+      "artifact_id": "LS-004",
+      "prompt_file": "02_LS-004_LS_KeyVault.txt",
+      "output_path": "./generated_code/adf_linked_services/LS_KeyVault.json"
+    },
+    {
+      "artifact_id": "LS-002",
+      "prompt_file": "03_LS-002_LS_ADLS_DataLake.txt",
+      "output_path": "./generated_code/adf_linked_services/LS_ADLS_DataLake.json"
+    },
+    {
+      "artifact_id": "LS-001",
+      "prompt_file": "04_LS-001_LS_AzureSQL_Source.txt",
+      "output_path": "./generated_code/adf_linked_services/LS_AzureSQL_Source.json"
+    },
+    {
+      "artifact_id": "LS-003",
+      "prompt_file": "05_LS-003_LS_Databricks.txt",
+      "output_path": "./generated_code/adf_linked_services/LS_Databricks.json"
+    },
+    {
+      "artifact_id": "DS-003",
+      "prompt_file": "06_DS-003_DS_ADLS_ControlTable_Delta.txt",
+      "output_path": "./generated_code/adf_datasets/DS_ADLS_ControlTable_Delta.json"
+    },
+    {
+      "artifact_id": "DS-001",
+      "prompt_file": "07_DS-001_DS_AzureSQL_Source_Generic.txt",
+      "output_path": "./generated_code/adf_datasets/DS_AzureSQL_Source_Generic.json"
+    },
+    {
+      "artifact_id": "DS-002",
+      "prompt_file": "08_DS-002_DS_ADLS_Staging_Parquet_Generic.txt",
+      "output_path": "./generated_code/adf_datasets/DS_ADLS_Staging_Parquet_Generic.json"
+    },
+    {
+      "artifact_id": "NB-001",
+      "prompt_file": "09_NB-001_nb_bronze_ingestion.txt",
+      "output_path": "./generated_code/databricks_notebooks/nb_bronze_ingestion.py"
+    },
+    {
+      "artifact_id": "NB-002",
+      "prompt_file": "10_NB-002_nb_bronze_update_control.txt",
+      "output_path": "./generated_code/databricks_notebooks/nb_bronze_update_control.py"
+    },
+    {
+      "artifact_id": "SQL-002",
+      "prompt_file": "11_SQL-002_bronze_ingestion_watermarks_seed_data.sql.txt",
+      "output_path": "./generated_code/sql_scripts/bronze_ingestion_watermarks_seed_data.sql"
+    },
+    {
+      "artifact_id": "PL-002",
+      "prompt_file": "12_PL-002_PL_Bronze_Incremental.txt",
+      "output_path": "./generated_code/adf_pipelines/PL_Bronze_Incremental.json"
+    },
+    {
+      "artifact_id": "PL-003",
+      "prompt_file": "13_PL-003_PL_Bronze_Snapshot.txt",
+      "output_path": "./generated_code/adf_pipelines/PL_Bronze_Snapshot.json"
+    },
+    {
+      "artifact_id": "PL-001",
+      "prompt_file": "14_PL-001_PL_Bronze_Master.txt",
+      "output_path": "./generated_code/adf_pipelines/PL_Bronze_Master.json"
+    },
+    {
+      "artifact_id": "TR-001",
+      "prompt_file": "15_TR-001_TR_Bronze_NearRealtime.txt",
+      "output_path": "./generated_code/adf_triggers/TR_Bronze_NearRealtime.json"
+    },
+    {
+      "artifact_id": "TR-002",
+      "prompt_file": "16_TR-002_TR_Bronze_DailyBatch.txt",
+      "output_path": "./generated_code/adf_triggers/TR_Bronze_DailyBatch.json"
+    },
+    {
+      "artifact_id": "TR-003",
+      "prompt_file": "17_TR-003_TR_Bronze_QuarterlySnapshot.txt",
+      "output_path": "./generated_code/adf_triggers/TR_Bronze_QuarterlySnapshot.json"
+    },
+    {
+      "artifact_id": "JOB-001",
+      "prompt_file": "18_JOB-001_Bronze_Optimize_Job.txt",
+      "output_path": "./generated_code/databricks_jobs/Bronze_Optimize_Job.json"
+    },
+    {
+      "artifact_id": "JOB-002",
+      "prompt_file": "19_JOB-002_Bronze_Vacuum_Job.txt",
+      "output_path": "./generated_code/databricks_jobs/Bronze_Vacuum_Job.json"
+    },
+    {
+      "artifact_id": "JOB-003",
+      "prompt_file": "20_JOB-003_Bronze_ZOrder_Job.txt",
+      "output_path": "./generated_code/databricks_jobs/Bronze_ZOrder_Job.json"
+    }
+  ],
+  "failed": []
+}

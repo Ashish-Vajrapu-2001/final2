@@ -1,0 +1,688 @@
+{
+  "name": "PL_Bronze_Snapshot",
+  "properties": {
+    "description": "Generic pipeline for processing full snapshot tables (e.g., quarterly reference data) into the Bronze layer.",
+    "activities": [
+      {
+        "name": "Get_Table_List",
+        "type": "Lookup",
+        "dependsOn": [],
+        "policy": {
+          "timeout": "0.12:00:00",
+          "retry": 3,
+          "retryIntervalInSeconds": 30,
+          "secureOutput": false,
+          "secureInput": false
+        },
+        "userProperties": [
+          {
+            "name": "purpose",
+            "value": "Retrieve table configurations for full snapshot tables from control table (DS-003)."
+          }
+        ],
+        "typeProperties": {
+          "source": {
+            "type": "AzureSqlSource",
+            "sqlReaderQuery": {
+              "value": "SELECT\n    SourceSystemCode,\n    SchemaName,\n    TableName,\n    LastWatermarkValue,\n    LoadType,\n    WatermarkColumn, -- Assumed to exist in bronze_control_table for metadata retrieval\n    LoadFrequency    -- Assumed to exist in bronze_control_table for filtering\nFROM\n    [dbo].[bronze_control_table]\nWHERE\n    IsActive = 1\n    AND LoadType = 'FULL_SNAPSHOT'\n    AND ('@{pipeline().parameters.p_frequency_filter}' = 'all' OR LoadFrequency = '@{pipeline().parameters.p_frequency_filter}')\n    AND (json_length(string(pipeline().parameters.p_table_filter)) = 0 OR EXISTS (SELECT 1 FROM OPENJSON(string(pipeline().parameters.p_table_filter)) WHERE value = CONCAT(SourceSystemCode, '.', SchemaName, '.', TableName)))",
+              "type": "Expression"
+            },
+            "queryTimeout": "02:00:00"
+          },
+          "dataset": {
+            "referenceName": "DS_Bronze_SQL_ControlTable",
+            "type": "DatasetReference"
+          },
+          "firstRowOnly": false
+        }
+      },
+      {
+        "name": "ForEach_Table",
+        "type": "ForEach",
+        "dependsOn": [
+          {
+            "activity": "Get_Table_List",
+            "dependencyConditions": [
+              "Succeeded"
+            ]
+          }
+        ],
+        "userProperties": [
+          {
+            "name": "purpose",
+            "value": "Iterate through each table configuration."
+          }
+        ],
+        "typeProperties": {
+          "items": {
+            "value": "@activity('Get_Table_List').output.value",
+            "type": "Expression"
+          },
+          "isSequential": true,
+          "activities": [
+            {
+              "name": "Set_Table_Metadata_Variables",
+              "type": "SetVariable",
+              "dependsOn": [],
+              "policy": {
+                "secureOutput": false,
+                "secureInput": false
+              },
+              "userProperties": [
+                {
+                  "name": "purpose",
+                  "value": "Extract table details (SourceSystemCode, SchemaName, TableName, LastWatermarkValue, LoadType, WatermarkColumn)."
+                }
+              ],
+              "typeProperties": {
+                "variableName": "SourceSystemCode",
+                "value": {
+                  "value": "@item().SourceSystemCode",
+                  "type": "Expression"
+                }
+              }
+            },
+            {
+              "name": "Set_SchemaName",
+              "type": "SetVariable",
+              "dependsOn": [
+                {
+                  "activity": "Set_Table_Metadata_Variables",
+                  "dependencyConditions": [
+                    "Succeeded"
+                  ]
+                }
+              ],
+              "policy": {
+                "secureOutput": false,
+                "secureInput": false
+              },
+              "userProperties": [],
+              "typeProperties": {
+                "variableName": "SchemaName",
+                "value": {
+                  "value": "@item().SchemaName",
+                  "type": "Expression"
+                }
+              }
+            },
+            {
+              "name": "Set_TableName",
+              "type": "SetVariable",
+              "dependsOn": [
+                {
+                  "activity": "Set_SchemaName",
+                  "dependencyConditions": [
+                    "Succeeded"
+                  ]
+                }
+              ],
+              "policy": {
+                "secureOutput": false,
+                "secureInput": false
+              },
+              "userProperties": [],
+              "typeProperties": {
+                "variableName": "TableName",
+                "value": {
+                  "value": "@item().TableName",
+                  "type": "Expression"
+                }
+              }
+            },
+            {
+              "name": "Set_LastWatermarkValue",
+              "type": "SetVariable",
+              "dependsOn": [
+                {
+                  "activity": "Set_TableName",
+                  "dependencyConditions": [
+                    "Succeeded"
+                  ]
+                }
+              ],
+              "policy": {
+                "secureOutput": false,
+                "secureInput": false
+              },
+              "userProperties": [],
+              "typeProperties": {
+                "variableName": "LastWatermarkValue",
+                "value": {
+                  "value": "@item().LastWatermarkValue",
+                  "type": "Expression"
+                }
+              }
+            },
+            {
+              "name": "Set_LoadType",
+              "type": "SetVariable",
+              "dependsOn": [
+                {
+                  "activity": "Set_LastWatermarkValue",
+                  "dependencyConditions": [
+                    "Succeeded"
+                  ]
+                }
+              ],
+              "policy": {
+                "secureOutput": false,
+                "secureInput": false
+              },
+              "userProperties": [],
+              "typeProperties": {
+                "variableName": "LoadType",
+                "value": {
+                  "value": "@item().LoadType",
+                  "type": "Expression"
+                }
+              }
+            },
+            {
+              "name": "Set_WatermarkColumn",
+              "type": "SetVariable",
+              "dependsOn": [
+                {
+                  "activity": "Set_LoadType",
+                  "dependencyConditions": [
+                    "Succeeded"
+                  ]
+                }
+              ],
+              "policy": {
+                "secureOutput": false,
+                "secureInput": false
+              },
+              "userProperties": [],
+              "typeProperties": {
+                "variableName": "WatermarkColumn",
+                "value": {
+                  "value": "@coalesce(item().WatermarkColumn, 'N/A')",
+                  "type": "Expression"
+                }
+              }
+            },
+            {
+              "name": "Set_Path_And_Query_Variables",
+              "type": "SetVariable",
+              "dependsOn": [
+                {
+                  "activity": "Set_WatermarkColumn",
+                  "dependencyConditions": [
+                    "Succeeded"
+                  ]
+                }
+              ],
+              "policy": {
+                "secureOutput": false,
+                "secureInput": false
+              },
+              "userProperties": [
+                {
+                  "name": "purpose",
+                  "value": "Set CurrentWatermarkValue, BronzePath, StagingPath, and DynamicQuery."
+                }
+              ],
+              "typeProperties": {
+                "variableName": "CurrentWatermarkValue",
+                "value": {
+                  "value": "@formatDateTime(utcNow(), 'yyyy-MM-dd HH:mm:ss.fff')",
+                  "type": "Expression"
+                }
+              }
+            },
+            {
+              "name": "Set_BronzePath",
+              "type": "SetVariable",
+              "dependsOn": [
+                {
+                  "activity": "Set_Path_And_Query_Variables",
+                  "dependencyConditions": [
+                    "Succeeded"
+                  ]
+                }
+              ],
+              "policy": {
+                "secureOutput": false,
+                "secureInput": false
+              },
+              "userProperties": [],
+              "typeProperties": {
+                "variableName": "BronzePath",
+                "value": {
+                  "value": "abfss://bronze@adlsbronzedev.dfs.core.windows.net/data/@{variables('SourceSystemCode')}/@{variables('SchemaName')}/@{variables('TableName')}",
+                  "type": "Expression"
+                }
+              }
+            },
+            {
+              "name": "Set_StagingPath",
+              "type": "SetVariable",
+              "dependsOn": [
+                {
+                  "activity": "Set_BronzePath",
+                  "dependencyConditions": [
+                    "Succeeded"
+                  ]
+                }
+              ],
+              "policy": {
+                "secureOutput": false,
+                "secureInput": false
+              },
+              "userProperties": [],
+              "typeProperties": {
+                "variableName": "StagingPath",
+                "value": {
+                  "value": "abfss://staging@adlsbronzedev.dfs.core.windows.net/staging/@{variables('SourceSystemCode')}/@{variables('SchemaName')}/@{variables('TableName')}/temp_staging_@{pipeline().RunId}",
+                  "type": "Expression"
+                }
+              }
+            },
+            {
+              "name": "Set_DynamicQuery",
+              "type": "SetVariable",
+              "dependsOn": [
+                {
+                  "activity": "Set_StagingPath",
+                  "dependencyConditions": [
+                    "Succeeded"
+                  ]
+                }
+              ],
+              "policy": {
+                "secureOutput": false,
+                "secureInput": false
+              },
+              "userProperties": [],
+              "typeProperties": {
+                "variableName": "DynamicQuery",
+                "value": {
+                  "value": "SELECT * FROM @{variables('SchemaName')}.@{variables('TableName')}",
+                  "type": "Expression"
+                }
+              }
+            },
+            {
+              "name": "Extract_to_Staging",
+              "type": "Copy",
+              "dependsOn": [
+                {
+                  "activity": "Set_DynamicQuery",
+                  "dependencyConditions": [
+                    "Succeeded"
+                  ]
+                }
+              ],
+              "policy": {
+                "timeout": "0.12:00:00",
+                "retry": 3,
+                "retryIntervalInSeconds": 30,
+                "secureOutput": false,
+                "secureInput": false
+              },
+              "userProperties": [
+                {
+                  "name": "purpose",
+                  "value": "Extract data from Source SQL (DS-001) to ADLS Staging (DS-002) using full snapshot logic."
+                }
+              ],
+              "typeProperties": {
+                "source": {
+                  "type": "AzureSqlSource",
+                  "sqlReaderQuery": {
+                    "value": "@variables('DynamicQuery')",
+                    "type": "Expression"
+                  },
+                  "queryTimeout": "02:00:00",
+                  "partitionOption": "None"
+                },
+                "sink": {
+                  "type": "DelimitedTextSink",
+                  "storeSettings": {
+                    "type": "AzureBlobFSWriteSettings",
+                    "copyBehavior": "PreserveHierarchy"
+                  },
+                  "formatSettings": {
+                    "type": "DelimitedTextWriteSettings",
+                    "quoteAllText": true,
+                    "fileExtension": ".csv"
+                  }
+                },
+                "enableSkipErrorFile": true,
+                "dataIntegrationUnits": 16,
+                "logSettings": {
+                  "enableCopyActivityLog": true,
+                  "logSettings": {
+                    "scenario": "FailuresOnly",
+                    "logLevel": "Warning",
+                    "enableReliableLogging": false
+                  }
+                },
+                "inputDataset": {
+                  "referenceName": "DS_Bronze_SQL_SourceTable",
+                  "type": "DatasetReference",
+                  "parameters": {
+                    "schemaName": {
+                      "value": "@variables('SchemaName')",
+                      "type": "Expression"
+                    },
+                    "tableName": {
+                      "value": "@variables('TableName')",
+                      "type": "Expression"
+                    }
+                  }
+                },
+                "outputDataset": {
+                  "referenceName": "DS_Bronze_ADLS_Staging_CSV",
+                  "type": "DatasetReference",
+                  "parameters": {
+                    "folderPath": {
+                      "value": "@split(variables('StagingPath'), 'adlsbronzedev.dfs.core.windows.net/')[1]",
+                      "type": "Expression"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "name": "Transform_to_Delta",
+              "type": "DatabricksNotebook",
+              "dependsOn": [
+                {
+                  "activity": "Extract_to_Staging",
+                  "dependencyConditions": [
+                    "Succeeded"
+                  ]
+                }
+              ],
+              "policy": {
+                "timeout": "0.12:00:00",
+                "retry": 3,
+                "retryIntervalInSeconds": 30,
+                "secureOutput": false,
+                "secureInput": false
+              },
+              "userProperties": [
+                {
+                  "name": "purpose",
+                  "value": "Run nb_bronze_ingestion (NB-001) to convert staged data to Delta Lake with 'overwrite' write mode for snapshots."
+                }
+              ],
+              "typeProperties": {
+                "notebookPath": "/bronze/ingestion/nb_bronze_ingestion",
+                "baseParameters": {
+                  "source_system_code": {
+                    "value": "@variables('SourceSystemCode')",
+                    "type": "Expression"
+                  },
+                  "schema_name": {
+                    "value": "@variables('SchemaName')",
+                    "type": "Expression"
+                  },
+                  "table_name": {
+                    "value": "@variables('TableName')",
+                    "type": "Expression"
+                  },
+                  "load_type": {
+                    "value": "FULL_SNAPSHOT",
+                    "type": "Expression"
+                  },
+                  "watermark_value": {
+                    "value": "@variables('CurrentWatermarkValue')",
+                    "type": "Expression"
+                  }
+                },
+                "sparkCluster": {
+                  "value": "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/YOUR_RESOURCE_GROUP/providers/Microsoft.Databricks/workspaces/adb-bronze-dev/clusters/YOUR_CLUSTER_ID",
+                  "type": "Expression"
+                }
+              },
+              "linkedServiceName": {
+                "referenceName": "LS_Bronze_Databricks",
+                "type": "LinkedServiceReference"
+              }
+            },
+            {
+              "name": "Update_Control_Table_Success",
+              "type": "DatabricksNotebook",
+              "dependsOn": [
+                {
+                  "activity": "Transform_to_Delta",
+                  "dependencyConditions": [
+                    "Succeeded"
+                  ]
+                }
+              ],
+              "policy": {
+                "timeout": "0.01:00:00",
+                "retry": 0,
+                "retryIntervalInSeconds": 30,
+                "secureOutput": false,
+                "secureInput": false
+              },
+              "userProperties": [
+                {
+                  "name": "purpose",
+                  "value": "Run nb_bronze_update_control (NB-002) on success."
+                }
+              ],
+              "typeProperties": {
+                "notebookPath": "/bronze/control/nb_bronze_update_control",
+                "baseParameters": {
+                  "source_system_code": {
+                    "value": "@variables('SourceSystemCode')",
+                    "type": "Expression"
+                  },
+                  "schema_name": {
+                    "value": "@variables('SchemaName')",
+                    "type": "Expression"
+                  },
+                  "table_name": {
+                    "value": "@variables('TableName')",
+                    "type": "Expression"
+                  },
+                  "new_watermark_value": {
+                    "value": "@variables('CurrentWatermarkValue')",
+                    "type": "Expression"
+                  },
+                  "status": {
+                    "value": "SUCCESS",
+                    "type": "Expression"
+                  }
+                },
+                "sparkCluster": {
+                  "value": "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/YOUR_RESOURCE_GROUP/providers/Microsoft.Databricks/workspaces/adb-bronze-dev/clusters/YOUR_CLUSTER_ID",
+                  "type": "Expression"
+                }
+              },
+              "linkedServiceName": {
+                "referenceName": "LS_Bronze_Databricks",
+                "type": "LinkedServiceReference"
+              }
+            },
+            {
+              "name": "Update_Control_Table_Failure",
+              "type": "DatabricksNotebook",
+              "dependsOn": [
+                {
+                  "activity": "Extract_to_Staging",
+                  "dependencyConditions": [
+                    "Failed"
+                  ]
+                },
+                {
+                  "activity": "Transform_to_Delta",
+                  "dependencyConditions": [
+                    "Failed"
+                  ]
+                }
+              ],
+              "policy": {
+                "timeout": "0.01:00:00",
+                "retry": 0,
+                "retryIntervalInSeconds": 30,
+                "secureOutput": false,
+                "secureInput": false
+              },
+              "userProperties": [
+                {
+                  "name": "purpose",
+                  "value": "Run nb_bronze_update_control (NB-002) on failure."
+                }
+              ],
+              "typeProperties": {
+                "notebookPath": "/bronze/control/nb_bronze_update_control",
+                "baseParameters": {
+                  "source_system_code": {
+                    "value": "@variables('SourceSystemCode')",
+                    "type": "Expression"
+                  },
+                  "schema_name": {
+                    "value": "@variables('SchemaName')",
+                    "type": "Expression"
+                  },
+                  "table_name": {
+                    "value": "@variables('TableName')",
+                    "type": "Expression"
+                  },
+                  "new_watermark_value": {
+                    "value": "@variables('LastWatermarkValue')",
+                    "type": "Expression"
+                  },
+                  "status": {
+                    "value": "FAILED",
+                    "type": "Expression"
+                  }
+                },
+                "sparkCluster": {
+                  "value": "/subscriptions/YOUR_SUBSCRIPTION_ID/resourceGroups/YOUR_RESOURCE_GROUP/providers/Microsoft.Databricks/workspaces/adb-bronze-dev/clusters/YOUR_CLUSTER_ID",
+                  "type": "Expression"
+                }
+              },
+              "linkedServiceName": {
+                "referenceName": "LS_Bronze_Databricks",
+                "type": "LinkedServiceReference"
+              }
+            },
+            {
+              "name": "Cleanup_Staging",
+              "type": "Delete",
+              "dependsOn": [
+                {
+                  "activity": "Update_Control_Table_Success",
+                  "dependencyConditions": [
+                    "Succeeded"
+                  ]
+                },
+                {
+                  "activity": "Update_Control_Table_Failure",
+                  "dependencyConditions": [
+                    "Succeeded"
+                  ]
+                }
+              ],
+              "policy": {
+                "timeout": "0.00:30:00",
+                "retry": 0,
+                "retryIntervalInSeconds": 30,
+                "secureOutput": false,
+                "secureInput": false
+              },
+              "userProperties": [
+                {
+                  "name": "purpose",
+                  "value": "Delete temporary staging folder."
+                }
+              ],
+              "typeProperties": {
+                "dataset": {
+                  "referenceName": "DS_Bronze_ADLS_Folder",
+                  "type": "DatasetReference",
+                  "parameters": {
+                    "folderPath": {
+                      "value": "@split(variables('StagingPath'), 'adlsbronzedev.dfs.core.windows.net/')[1]",
+                      "type": "Expression"
+                    }
+                  }
+                },
+                "enableLogging": false,
+                "logStorageSettings": {
+                  "linkedServiceName": null,
+                  "path": null
+                }
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "parameters": {
+      "p_environment": {
+        "type": "String",
+        "defaultValue": "dev",
+        "description": "Specifies the target environment (e.g., dev, test, prod)."
+      },
+      "p_load_type": {
+        "type": "String",
+        "defaultValue": "FULL_SNAPSHOT",
+        "description": "Determines the load strategy (e.g., full, incremental). Fixed to FULL_SNAPSHOT for this pipeline type."
+      },
+      "p_frequency_filter": {
+        "type": "String",
+        "defaultValue": "all",
+        "description": "Filters which tables to process based on their load_frequency."
+      },
+      "p_table_filter": {
+        "type": "Array",
+        "defaultValue": [],
+        "description": "Optional parameter to specify a subset of tables."
+      },
+      "p_batch_id": {
+        "type": "String",
+        "defaultValue": "@pipeline().RunId",
+        "description": "Unique identifier for the current pipeline run."
+      }
+    },
+    "variables": {
+      "SourceSystemCode": {
+        "type": "String"
+      },
+      "SchemaName": {
+        "type": "String"
+      },
+      "TableName": {
+        "type": "String"
+      },
+      "LastWatermarkValue": {
+        "type": "String"
+      },
+      "LoadType": {
+        "type": "String"
+      },
+      "WatermarkColumn": {
+        "type": "String"
+      },
+      "CurrentWatermarkValue": {
+        "type": "String"
+      },
+      "BronzePath": {
+        "type": "String"
+      },
+      "StagingPath": {
+        "type": "String"
+      },
+      "DynamicQuery": {
+        "type": "String"
+      }
+    },
+    "folder": {
+      "name": "Bronze"
+    },
+    "annotations": [
+      "PL_Bronze_Snapshot"
+    ],
+    "lastPublishTime": "2023-10-27T10:00:00Z"
+  },
+  "type": "Microsoft.DataFactory/factories/pipelines"
+}

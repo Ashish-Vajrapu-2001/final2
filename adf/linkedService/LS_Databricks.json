@@ -1,0 +1,22 @@
+{
+  "name": "LS_Databricks",
+  "properties": {
+    "type": "AzureDatabricks",
+    "description": "Connects to the Azure Databricks workspace to execute notebooks.",
+    "annotations": [],
+    "typeProperties": {
+      "domain": "https://adb-bronze-dev.adb.azuredatabricks.net",
+      "accessToken": {
+        "type": "AzureKeyVaultSecret",
+        "store": {
+          "referenceName": "LS_KeyVault",
+          "type": "LinkedServiceReference"
+        },
+        "secretName": "databricks-bronze-dev-access-token"
+      },
+      "newClusterVersion": "12.2.x-scala2.12",
+      "newClusterNodeType": "Standard_DS3_v2",
+      "newClusterNumOfWorker": "2"
+    }
+  }
+}

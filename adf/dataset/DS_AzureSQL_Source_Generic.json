@@ -1,0 +1,33 @@
+{
+    "name": "DS_AzureSQL_Source_Generic",
+    "properties": {
+        "description": "Generic dataset representing a table in the source Azure SQL Database, used for data extraction.",
+        "linkedServiceName": {
+            "referenceName": "LS_AzureSQL_Source",
+            "type": "LinkedServiceReference"
+        },
+        "parameters": {
+            "schema_name": {
+                "type": "String",
+                "description": "Source schema name"
+            },
+            "table_name": {
+                "type": "String",
+                "description": "Source table name"
+            }
+        },
+        "annotations": [],
+        "type": "AzureSqlTable",
+        "schema": [],
+        "typeProperties": {
+            "schema": {
+                "value": "@dataset().schema_name",
+                "type": "Expression"
+            },
+            "table": {
+                "value": "@dataset().table_name",
+                "type": "Expression"
+            }
+        }
+    }
+}

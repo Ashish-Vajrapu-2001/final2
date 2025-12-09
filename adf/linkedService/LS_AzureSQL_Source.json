@@ -1,0 +1,21 @@
+{
+  "name": "LS_AzureSQL_Source",
+  "properties": {
+    "annotations": [],
+    "type": "AzureSqlDatabase",
+    "typeProperties": {
+      "connectionString": {
+        "type": "AzureKeyVaultSecret",
+        "store": {
+          "referenceName": "LS_AzureKeyVault_Dev",
+          "type": "LinkedServiceReference"
+        },
+        "secretName": "SqlSourceConnectionString"
+      }
+    },
+    "connectVia": {
+      "referenceName": "AutoResolveIntegrationRuntime",
+      "type": "IntegrationRuntimeReference"
+    }
+  }
+}

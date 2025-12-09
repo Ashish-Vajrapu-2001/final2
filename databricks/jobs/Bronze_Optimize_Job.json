@@ -1,0 +1,45 @@
+{
+  "name": "Bronze_Optimize_Job",
+  "tags": {
+    "project": "bronze_layer",
+    "environment": "dev",
+    "job_type": "optimize"
+  },
+  "schedule": {
+    "quartz_cron_expression": "0 0 2 ? * SUN *",
+    "timezone_id": "UTC",
+    "pause_status": "UNPAUSED"
+  },
+  "job_clusters": [
+    {
+      "job_cluster_key": "optimize_cluster",
+      "new_cluster": {
+        "spark_version": "13.3.x-scala2.12",
+        "node_type_id": "Standard_DS3_v2",
+        "num_workers": 2,
+        "autotermination_minutes": 60,
+        "custom_tags": {
+          "project": "bronze_layer",
+          "environment": "dev",
+          "job_cluster_purpose": "bronze_optimize"
+        }
+      }
+    }
+  ],
+  "tasks": [
+    {
+      "task_key": "optimize_all_bronze_tables",
+      "job_cluster_key": "optimize_cluster",
+      "notebook_task": {
+        "notebook_path": "/bronze/notebooks/BronzeOptimizeNotebook",
+        "base_parameters": {}
+      },
+      "timeout_seconds": 3600,
+      "max_retries": 1,
+      "min_retry_interval_millis": 1000,
+      "retry_on_timeout": true
+    }
+  ],
+  "timeout_seconds": 7200,
+  "max_concurrent_runs": 1
+}
